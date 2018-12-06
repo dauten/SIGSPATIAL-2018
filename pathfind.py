@@ -18,10 +18,10 @@ class Edge:
 			self.fromX = ls[0]
 			self.fromY = ls[1]
 			self.toX = ls[2]
-			self.toY = ls[3][:-1]
+			self.toY = ls[3]
 		else:
 			self.fromX = ls[2]
-			self.fromY = ls[3][:-1]
+			self.fromY = ls[3]
 			self.toX = ls[0]
 			self.toY = ls[1]
 
@@ -29,46 +29,52 @@ class Edge:
 		self.visited = False
 
 	def getSourceName(self):
-		return self.fromX+self.fromY
+		return str(self.fromX)+str(self.fromY)
 
 	def getDestName(self):
-		return self.toX+self.toY
+		return str(self.toX)+str(self.toY)
 
 	def __str__(self):
 		return self.getSourceName() + "|" + self.getDestName()
 
-sources = ["6815946.038261843672.78242", "6815957.268881843079.85972", "6815953.440481843350.4143"]
-sinks = ["6815718.619431843338.92843", "6815975.135641842907.57266"]
+sources = ["6815960.3318683061842957.0892968029"]
+sinks = []
 
 
 #begin Input
-cords = open("zzzout.txt", "r")
 pmap = {}
 masterlist = []
 
-for line in cords:
-	temp = Edge(line.split(" "), 0)
+#get sinks
+for line in data["controllers"]:
+	sinks.append(str(line["geometry"]["x"])+str(line["geometry"]["y"]))
 
-	if temp.getSourceName() not in pmap.keys():
-		pmap[temp.getSourceName()] = [temp]
-	else:
-		t = pmap[temp.getSourceName()]
-		t.append(temp)
-		pmap[temp.getSourceName()] = t
+# get the graph edges
+paths = []
+for row in data['rows']:
+    edges =  row['viaGeometry']
+    edges = edges.get('paths')
+    if edges != None:
+        edges = edges[0]
+        edges = [ (x[0],x[1] ) for x in edges ]
+    paths.append( edges )
 
+for p in paths:
+	if p != None:
+		for i in range(1, len(p)):
+			edge = Edge([p[i-1][0], p[i-1][1], p[i][0], p[i][1]], 1)	
 
-
-	temp = Edge(line.split(" "), 1)
-
-	if temp.getSourceName() not in pmap.keys():
-		pmap[temp.getSourceName()] = [temp]
-	else:
-		t = pmap[temp.getSourceName()]
-		t.append(temp)
-		pmap[temp.getSourceName()] = t
+			if edge.getSourceName() in pmap.keys():
+				temp = pmap[edge.getSourceName()]
+				temp.append(edge)
+				pmap[edge.getSourceName()] = temp
+			else:
+				pmap[edge.getSourceName()] = [edge]
 #end Input
 
-#	print("for the record pmap.keys looks like: "+str(pmap.keys())+"\n\n\n")
+for key in pmap.keys():
+	for k in pmap[key]:
+		print(k)
 
 #P: hashmap of edges
 #   sourceName of source
@@ -86,13 +92,14 @@ def BFS(edgeList, source, destination):
 
 	while not q.empty():
 		head = q.get()
-		for edge in edgeList[head.getDestName()]:
-			if not edge.visited:
-				edge.visited = True
-				q.put(edge)
-				edge.parent = head
-				if edge.getDestName() == destination and len(path) == 0:
-					path.append(edge)
+		if head.getDestName() in edgeList.keys():
+			for edge in edgeList[head.getDestName()]:
+				if not edge.visited:
+					edge.visited = True
+					q.put(edge)
+					edge.parent = head
+					if edge.getDestName() == destination and len(path) == 0:
+						path.append(edge)
 
 	if len(path) == 0:
 		print("no path exists")
@@ -117,4 +124,4 @@ for p in sources:
 		out = BFS(pmap, p, q)
 		
 		for e in out:
-			print(e.fromX+", "+e.fromY+" -> "+e.toX+", "+e.toY)
+			print(str(e.fromX)+", "+str(e.fromY)+" -> "+str(e.toX)+", "+str(e.toY))
