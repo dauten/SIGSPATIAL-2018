@@ -11,7 +11,10 @@ filename = sys.argv[1]
 
 
 data = json.loads(open(filename, "r").read())
-
+#very primitive, very bad arg parsing, I know
+if len(sys.argv) > 2 and sys.argv[2] == "-v":
+	print(json.dumps(data, indent=4))
+	
 class Edge:
 	def __init__(self, ls, r):
 		if r is 0:
@@ -37,7 +40,9 @@ class Edge:
 	def __str__(self):
 		return self.getSourceName() + "|" + self.getDestName()
 
-sources = ["6815960.3318683061842957.0892968029"]
+sources = []
+for line in open("starting.txt", "r").read().split("\n"):
+	if line != '': sources.append(line)
 sinks = []
 
 
@@ -52,12 +57,13 @@ for line in data["controllers"]:
 # get the graph edges
 paths = []
 for row in data['rows']:
-    edges =  row['viaGeometry']
-    edges = edges.get('paths')
-    if edges != None:
-        edges = edges[0]
-        edges = [ (x[0],x[1] ) for x in edges ]
-    paths.append( edges )
+	
+	edges =  row['viaGeometry']
+	edges = edges.get('paths')
+	if edges != None:
+		edges = edges[0]
+		edges = [ (x[0],x[1] ) for x in edges ]
+	paths.append( edges )
 
 for p in paths:
 	if p != None:
@@ -72,9 +78,6 @@ for p in paths:
 				pmap[edge.getSourceName()] = [edge]
 #end Input
 
-for key in pmap.keys():
-	for k in pmap[key]:
-		print(k)
 
 #P: hashmap of edges
 #   sourceName of source
@@ -113,9 +116,6 @@ def BFS(edgeList, source, destination):
 			edge.visited = None
 
 	return path
-
-
-
 
 
 for p in sources:
